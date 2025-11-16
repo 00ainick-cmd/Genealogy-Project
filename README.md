@@ -10,7 +10,7 @@ StoryTree is a web-based genealogy storytelling platform that converts GEDCOM fi
 
 - 📤 **GEDCOM Import**: Upload genealogy data from Ancestry.com and other platforms
 - 🌳 **Interactive Family Tree**: Explore your family with a zoomable, interactive tree visualization
-- 📖 **AI-Generated Narratives**: Documentary-style stories about your ancestors
+- 📖 **AI-Generated Narratives**: Documentary-style stories about your ancestors powered by Claude AI (✅ **Implemented**)
 - 📅 **Timeline View**: See family events across history
 - 🗺️ **Map View**: Visualize your family's geographic journey
 - ✏️ **Story Editing**: Customize and personalize AI-generated narratives
@@ -84,8 +84,10 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 │   └── ui/               # Reusable UI components
 ├── lib/                   # Utility functions
 │   ├── prisma.ts         # Prisma client
-│   ├── gedcom-parser.ts  # GEDCOM parsing logic
-│   └── ai-service.ts     # AI narrative generation
+│   ├── auth.ts           # NextAuth configuration
+│   ├── narrative-engine.ts    # AI narrative generation (Claude)
+│   ├── narrative-helpers.ts   # Data transformation for narratives
+│   └── gedcom-parser.ts  # GEDCOM parsing logic (planned)
 ├── prisma/               # Database schema
 │   └── schema.prisma     # Prisma schema
 ├── types/                # TypeScript type definitions
@@ -115,6 +117,10 @@ Key models:
 - `npm run db:generate` - Generate Prisma client
 - `npm run db:studio` - Open Prisma Studio
 
+## Documentation
+
+- **[Narrative Engine](docs/NARRATIVE_ENGINE.md)** - Complete guide to the AI narrative generation system
+
 ## Development Roadmap
 
 ### Phase 1: Foundation ✅
@@ -123,14 +129,14 @@ Key models:
 - [ ] Basic UI structure
 
 ### Phase 2: Core Features (In Progress)
-- [ ] User authentication
+- [x] User authentication ✅
 - [ ] GEDCOM upload and parsing
 - [ ] Project management
 - [ ] Family tree visualization
 
-### Phase 3: AI & Stories
-- [ ] Historical context database
-- [ ] AI narrative generation
+### Phase 3: AI & Stories ⚡ (In Progress)
+- [x] AI narrative generation (Claude integration) ✅
+- [x] Historical context engine ✅
 - [ ] Story editing interface
 - [ ] Chapter organization
 
