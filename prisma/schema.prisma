@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  name      String?
+  projects  Project[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Project {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gedcomFile  String?
+  stats       Json?
+  individuals Individual[]
+  families    Family[]
+  events      Event[]
+  narratives  Narrative[]
+  chapters    Chapter[]
+  shareLinks  ShareLink[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([userId])
+}
+
+model Individual {
+  id              String     @id @default(cuid())
+  projectId       String
+  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  gedcomId        String
+  givenName       String?
+  surname         String?
+  fullName        String?
+  gender          String?
+  birthDate       String?
+  birthPlace      String?
+  deathDate       String?
+  deathPlace      String?
+  occupation      String?
+  notes           String?
+  photoUrl        String?
+  events          Event[]
+  narrative       Narrative?
+  familiesAsSpouse Family[]  @relation("SpouseRelation")
+  familiesAsChild  Family[]  @relation("ChildRelation")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([projectId, gedcomId])
+  @@index([projectId])
+  @@index([surname])
+}
+
+model Family {
+  id            String       @id @default(cuid())
+  projectId     String
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  gedcomId      String
+  husband       Individual?  @relation("SpouseRelation", fields: [husbandId], references: [id])
+  husbandId     String?
+  wife          Individual?  @relation("SpouseRelation", fields: [wifeId], references: [id])
+  wifeId        String?
+  children      Individual[] @relation("ChildRelation")
+  marriageDate  String?
+  marriagePlace String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([projectId, gedcomId])
+  @@index([projectId])
+}
+
+model Event {
+  id           String      @id @default(cuid())
+  projectId    String
+  project      Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  individualId String
+  individual   Individual  @relation(fields: [individualId], references: [id], onDelete: Cascade)
+  type         String      // birth, death, marriage, immigration, residence, occupation, etc.
+  date         String?
+  place        String?
+  description  String?
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([projectId])
+  @@index([individualId])
+  @@index([type])
+}
+
+model Narrative {
+  id           String     @id @default(cuid())
+  individualId String     @unique
+  individual   Individual @relation(fields: [individualId], references: [id], onDelete: Cascade)
+  projectId    String
+  title        String?
+  content      Json       // Structured sections: earlyLife, work, family, historicalContext
+  isEdited     Boolean    @default(false)
+  isGenerated  Boolean    @default(false)
+  generatedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([projectId])
+}
+
+model Chapter {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  order       Int
+  episodeIds  String[] // Array of Individual IDs in this chapter
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model ShareLink {
+  id        String    @id @default(cuid())
+  token     String    @unique @default(cuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  @@index([projectId])
+  @@index([token])
+}
