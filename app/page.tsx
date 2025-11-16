@@ -1,14 +1,34 @@
 import { Button } from '@/components/ui/Button';
+import { auth } from '@/lib/auth';
+import Link from 'next/link';
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             StoryTree
           </h1>
+          <div className="flex gap-3">
+            {session?.user ? (
+              <Link href="/dashboard">
+                <Button variant="primary">Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="outline">Sign In</Button>
+                </Link>
+                <Link href="/auth/register">
+                  <Button variant="primary">Get Started</Button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -24,16 +44,20 @@ export default function Home() {
           </p>
 
           <div className="flex gap-4 justify-center">
-            <Button variant="primary" size="lg">
-              Get Started
-            </Button>
-            <Button variant="secondary" size="lg">
-              Learn More
-            </Button>
+            <Link href={session?.user ? '/dashboard' : '/auth/register'}>
+              <Button variant="primary" size="lg">
+                Get Started
+              </Button>
+            </Link>
+            <a href="#features">
+              <Button variant="secondary" size="lg">
+                Learn More
+              </Button>
+            </a>
           </div>
 
           {/* Features */}
-          <div className="grid md:grid-cols-3 gap-8 mt-16">
+          <div id="features" className="grid md:grid-cols-3 gap-8 mt-16">
             <div className="p-6">
               <div className="text-4xl mb-4">🌳</div>
               <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
