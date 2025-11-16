@@ -21,51 +21,61 @@ model User {
 }
 
 model Project {
-  id          String       @id @default(cuid())
-  name        String
-  description String?
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  gedcomFile  String?
-  stats       Json?
-  individuals Individual[]
-  families    Family[]
-  events      Event[]
-  narratives  Narrative[]
-  chapters    Chapter[]
-  shareLinks  ShareLink[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id               String         @id @default(cuid())
+  name             String
+  description      String?
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gedcomFile       String?
+  coverImageUrl    String?
+  dateRangeStart   Int?           // Year
+  dateRangeEnd     Int?           // Year
+  stats            Json?          // Summary statistics (person count, date ranges, key locations)
+  individuals      Individual[]
+  families         Family[]
+  relationships    Relationship[]
+  events           Event[]
+  narratives       Narrative[]
+  chapters         Chapter[]
+  shareLinks       ShareLink[]
+  historicalContext HistoricalContext[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@index([userId])
 }
 
 model Individual {
-  id              String     @id @default(cuid())
-  projectId       String
-  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  gedcomId        String
-  givenName       String?
-  surname         String?
-  fullName        String?
-  gender          String?
-  birthDate       String?
-  birthPlace      String?
-  deathDate       String?
-  deathPlace      String?
-  occupation      String?
-  notes           String?
-  photoUrl        String?
-  events          Event[]
-  narrative       Narrative?
-  familiesAsSpouse Family[]  @relation("SpouseRelation")
-  familiesAsChild  Family[]  @relation("ChildRelation")
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  id                    String         @id @default(cuid())
+  projectId             String
+  project               Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  gedcomId              String
+  givenName             String?
+  surname               String?
+  fullName              String?
+  gender                String?
+  birthDate             String?
+  birthPlace            String?
+  deathDate             String?
+  deathPlace            String?
+  occupation            String?
+  notes                 String?
+  photoUrl              String?
+  otherFacts            Json?          // Flexible field for additional GEDCOM data
+  events                Event[]
+  narrative             Narrative?
+  familiesAsSpouse      Family[]       @relation("SpouseRelation")
+  familiesAsChild       Family[]       @relation("ChildRelation")
+  relationshipsAsParent Relationship[] @relation("ParentRelation")
+  relationshipsAsChild  Relationship[] @relation("ChildRelation")
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
   @@unique([projectId, gedcomId])
   @@index([projectId])
   @@index([surname])
+  @@index([birthDate])
+  @@index([deathDate])
 }
 
 model Family {
@@ -147,4 +157,46 @@ model ShareLink {
 
   @@index([projectId])
   @@index([token])
+}
+
+// Explicit parent-child relationship tracking (complements Family model)
+model Relationship {
+  id          String     @id @default(cuid())
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        String     // "parent-child", "spouse" (though spouse is primarily in Family)
+  parentId    String
+  parent      Individual @relation("ParentRelation", fields: [parentId], references: [id], onDelete: Cascade)
+  childId     String
+  child       Individual @relation("ChildRelation", fields: [childId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([projectId])
+  @@index([parentId])
+  @@index([childId])
+  @@index([type])
+}
+
+// Historical context data for enriching narratives
+model HistoricalContext {
+  id          String   @id @default(cuid())
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  regionKey   String   // e.g., "US-CA", "UK-London", "Germany-Bavaria"
+  startYear   Int
+  endYear     Int
+  type        String   // "war", "economic", "cultural", "migration", "political"
+  title       String
+  description String   @db.Text
+  isGlobal    Boolean  @default(false) // If true, applies to all projects
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([regionKey])
+  @@index([startYear])
+  @@index([endYear])
+  @@index([type])
+  @@index([isGlobal])
+  @@index([projectId])
 }
